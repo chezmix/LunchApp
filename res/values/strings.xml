@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, I am a string resource!</string>
+    <string name="app_name">Lunch App!</string>
+    <string name="main_name">Main!</string>
+    <string name="history_name">History!</string>
+    <string name="locations_name">Locations!</string>
+    <string name="menu_add">Add</string>
+    <string name="no_locations">No Locations Yet!</string>
+    <string name="no_history">No History Yet!</string>
+    <string name="form_search">Thai</string>
+    <string name="form_add">Add</string>
+    <string name="menu_delete">Delete</string>
+    <string name="label_search">Search: </string>
+    <string name="label_add_to_history">Add to History</string>
+    <string name="label_add_to_locations">Add to Locations</string>
+    <string name="msg_commit">Location added to history.</string>
+    
+    <string-array name="food_array1">
+    	<item>Bring Back</item>
+        <item>Chinese</item>
+        <item>Indian</item>
+        <item>Mexican</item>                
+        <item>Thai</item>
+        <item>Vietnamese</item>        
+    </string-array>
+        <string name="label_favor_known_places">Favor Known Places</string>
+        <string name="label_use_historical_data">Use Historical Data</string>
+        <string name="search_lunch">Search</string>
+        <string name="spacer">   </string>
+    
+    
+</resources>
