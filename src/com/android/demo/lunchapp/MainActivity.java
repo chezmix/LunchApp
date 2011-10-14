@@ -11,12 +11,14 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.security.cert.CertificateException;
@@ -31,6 +33,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
  
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -38,13 +41,14 @@ public class MainActivity extends Activity {
 	private LunchDbAdapter mDbHelper;
 	private Button mSearchButton;
 	private Button mAddHistoryButton;
-	private Button mAddLocationsButton;
+	private Button mAddLocationButton;
 	private EditText mSearchForm;
 	private TextView mLunchResult;
-	private Boolean mGetNewResults;
+	private TextView mLunchStatus;
+	private ProgressBar mSearchProgressBar;
+	private String mLastSearchString;
 	private JSONArray mLocations;
 	private JSONObject mJSONLocation;
-	private int mCuisineId;
 	private LocationManager lm;
 	private double mLatitude;
 	private double mLongitude;
@@ -82,14 +86,15 @@ public class MainActivity extends Activity {
         mDbHelper.open();           
         setContentView(R.layout.today);
         mLunchResult= (TextView) findViewById(R.id.lunch_result);
-        mLunchResult.setText("no result");
-        
+        mLunchStatus = (TextView) findViewById(R.id.lunch_status);
+    	mLunchResult.setText("");
+    	mLunchStatus.setText("");
         mSearchButton = (Button) findViewById(R.id.search_button);
         mAddHistoryButton = (Button) findViewById(R.id.add_to_history_button);
-        mAddLocationsButton = (Button) findViewById(R.id.add_to_locations_button);
-        mGetNewResults = true;
+        mAddLocationButton = (Button) findViewById(R.id.add_to_locations_button);
+        mSearchProgressBar = (ProgressBar) findViewById(R.id.searchProgressBar);
+        mLastSearchString = "";
         mLocations = null;
-        mCuisineId = 3;
         lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 
@@ -98,41 +103,44 @@ public class MainActivity extends Activity {
         mSearchForm.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
             	mSearchForm.setText("");
-            	mGetNewResults = true;
             }
         });           
         
         mSearchButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+            	mLunchResult.setText("");
+            	mLunchStatus.setText("");
+	    		mAddHistoryButton.setVisibility(View.INVISIBLE);
+	    		mAddLocationButton.setVisibility(View.INVISIBLE);
+	    		mSearchProgressBar.setVisibility(View.VISIBLE);
+        	    if (!mSearchForm.getText().toString().equals(mLastSearchString)) {
+        	    	mLastSearchString = mSearchForm.getText().toString(); 
+        	    	String dummy = "";
+        	    	new GetLocationsTask().execute(dummy);
+        	    } else {
+        	    	mLunchResult.setText(getRandomLocation());
+        	    	mSearchProgressBar.setVisibility(View.INVISIBLE);
+    	    		mAddHistoryButton.setVisibility(View.VISIBLE);
+    	    		mAddLocationButton.setVisibility(View.VISIBLE);
+    	    		mAddHistoryButton.setEnabled(true);
+    	    		mAddLocationButton.setEnabled(true);  	    	
+        	    }
+            }
+        });
+        
+        
+        mAddHistoryButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+            	String name;
+            	String googleId;
             	try {
-            		Boolean error = false;
-            	    if (mGetNewResults) {
-            	    	String url = getGoogleURL();
-            	    	if (url != "") {
-                	    	mLocations = getLocations(new URL(url));
-            	    		//new GetLocationsTask().execute(new URL(url));
-                	    	mGetNewResults = false;
-            	    	} else {
-            	    		mLunchResult.setText("Error: cannot find GPS coordinates.");
-            	    		error = true;
-            	    	}
-            	    }
-         	    
-            	    if (!error) {
-            	    	Random generator = new Random();
-            	    	int r = generator.nextInt(mLocations.length());
-            	    	mJSONLocation = mLocations.getJSONObject(r);
-            	    	mJSONLocation.put("cuisine_id", Integer.toString(mCuisineId));
-            	    	mLunchResult.setText(mJSONLocation.getString("name"));
-        	    		mAddHistoryButton.setVisibility(View.VISIBLE);
-        	    		mAddLocationsButton.setVisibility(View.VISIBLE);
-            	    } else {
-        	    		mAddHistoryButton.setVisibility(View.INVISIBLE);
-        	    		mAddLocationsButton.setVisibility(View.INVISIBLE);
-            	    }
-            	    
-                } catch (IOException e) {  
-                    e.printStackTrace(); 
+            		if (mJSONLocation != null) {
+            			googleId = mJSONLocation.getString("id");
+            			name = mJSONLocation.getString("name");            			
+            			mDbHelper.addHistory(name, googleId);           		
+            			mLunchStatus.setText(name + " " + getString(R.string.msg_add_history));
+            			mAddHistoryButton.setEnabled(false);
+            		}
 				} catch (Exception e) {
 					Log.e("ERROR", "ERROR IN CODE: " + e.toString());
 					e.printStackTrace();
@@ -140,20 +148,24 @@ public class MainActivity extends Activity {
             }
         });
         
-        
-        mAddHistoryButton.setOnClickListener(new View.OnClickListener() {
+        mAddLocationButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+            	String name;
+            	String googleId;            	
             	try {
             		if (mJSONLocation != null) {
-            			mDbHelper.setTodaysLunch(mJSONLocation);           		
-            			mLunchResult.setText(R.string.msg_commit);
+            			googleId = mJSONLocation.getString("id");
+            			name = mJSONLocation.getString("name");  
+            			mDbHelper.addLocation(name, googleId);           		
+            			mLunchStatus.setText(name + " " + getString(R.string.msg_add_location));
+            			mAddLocationButton.setEnabled(false);
             		}
 				} catch (Exception e) {
 					Log.e("ERROR", "ERROR IN CODE: " + e.toString());
 					e.printStackTrace();
 				}
             }
-        });        
+        });            
         
 
     }
@@ -208,9 +220,9 @@ public class MainActivity extends Activity {
 	    	String domain = "https://maps.googleapis.com/";
 	    	String path = "maps/api/place/search/json";
 	    	String location = Double.toString(mLatitude) + "," + Double.toString(mLongitude);
-	    	String radius = "100";
+	    	String radius = "300";
 	    	String types = "food";
-	    	String name = mSearchForm.getText().toString();
+	    	String name = Uri.encode((mSearchForm.getText().toString()));
 	    	String sensor = "true";
 	    	//String url = "https://maps.googleapis.com/maps/api/place/search/json?location=40.7457,-73.9823&radius=100&types=food&name=thai&sensor=true&key=" + GOOGLE_PLACES_API_KEY;
 	    	url = domain + path + "?location=" + location + "&radius=" + radius + "&types=" + types + "&name=" + name + "&sensor=" + sensor + "&key=" + GOOGLE_PLACES_API_KEY; 
@@ -256,19 +268,62 @@ public class MainActivity extends Activity {
                     e.printStackTrace();
             }
     }
-   /*
-    private class GetLocationsTask extends AsyncTask<URL, Integer, JSONArray> {
-        protected JSONArray doInBackground(URL... urls) {
-            return getLocations(urls[0]);
+    
+    private String getRandomLocation() {
+    	String locationName = "";
+    	Random generator = new Random();
+    	int r = generator.nextInt(mLocations.length());
+    	try {
+			mJSONLocation = mLocations.getJSONObject(r);
+			locationName = mJSONLocation.getString("name");
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}    
+    	return locationName;
+    }
+    
+    private class GetLocationsTask extends AsyncTask<String, Integer, String> {
+        protected String doInBackground(String... dummy) {
+        	String labelText = "Error: GPS coordinates not found.";
+	    	try {
+    	    	String url = getGoogleURL();
+    	    	if (url != "") {
+        	    	mLocations = getLocations(new URL(url));
+	    	    	if (mLocations.length() > 0) {
+	        	    	labelText = getRandomLocation();
+	    	    	} else {
+	    	    		labelText = "No search results found.";
+	    	    		mLocations = null;
+	    	    	}
+    	    	}
+            } catch (IOException e) {  
+                e.printStackTrace(); 
+			} catch (Exception e) {
+				Log.e("ERROR", "ERROR IN CODE: " + e.toString());
+				e.printStackTrace();
+			}
+			
+			return labelText;
         }
 
         protected void onProgressUpdate(Integer... progress) {
             //setProgressPercent(progress[0]);
         }
 
-        protected void onPostExecute(JSONArray result) {
-        	mLocation = result;
+        protected void onPostExecute(String labelText) {
+        	mSearchProgressBar.setVisibility(View.INVISIBLE);
+    	    if (mLocations != null) {
+    	    	//mJSONLocation.put("cuisine_id", Integer.toString(mCuisineId));
+	    		mAddHistoryButton.setVisibility(View.VISIBLE);
+	    		mAddLocationButton.setVisibility(View.VISIBLE);
+	    		mAddHistoryButton.setEnabled(true);
+	    		mAddLocationButton.setEnabled(true);
+    	    } else {
+	    		mAddHistoryButton.setVisibility(View.INVISIBLE);
+	    		mAddLocationButton.setVisibility(View.INVISIBLE);
+    	    }
+    	    mLunchResult.setText(labelText);    	    
         }
     }
-    */
+   
 }

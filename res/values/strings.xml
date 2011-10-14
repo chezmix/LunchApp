@@ -14,7 +14,8 @@
     <string name="label_search">Search: </string>
     <string name="label_add_to_history">Add to History</string>
     <string name="label_add_to_locations">Add to Locations</string>
-    <string name="msg_commit">Location added to history.</string>
+    <string name="msg_add_history">added to History.</string>
+    <string name="msg_add_location">added to Locations.</string>
     
     <string-array name="food_array1">
     	<item>Bring Back</item>

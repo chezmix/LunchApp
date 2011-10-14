@@ -8,9 +8,11 @@
     <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:textAppearance="?android:attr/textAppearanceSmall" android:id="@+id/textView2" android:text="@string/label_favor_known_places" android:layout_marginTop="20dp"></TextView>
     <SeekBar android:id="@+id/seekBar1" android:layout_width="match_parent" android:layout_height="wrap_content"></SeekBar>
     <Button android:layout_height="wrap_content" android:layout_marginTop="40dp" android:layout_width="match_parent" android:text="@string/search_lunch" android:id="@+id/search_button"></Button>
-    <TextView android:layout_height="wrap_content" android:layout_width="match_parent" android:text="TextView" android:layout_marginTop="40dp" android:id="@+id/lunch_result" android:gravity="center_horizontal" android:layout_marginBottom="40dp"></TextView>
+    <TextView android:layout_height="wrap_content" android:layout_width="match_parent" android:text="TextView" android:layout_marginTop="40dp" android:id="@+id/lunch_result" android:gravity="center_horizontal" android:layout_marginBottom="5dp"></TextView>
+    <ProgressBar android:layout_width="wrap_content" android:id="@+id/searchProgressBar" android:layout_height="wrap_content" android:layout_gravity="center" android:visibility="invisible"></ProgressBar>
     <LinearLayout android:id="@+id/linearLayout1" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center">
         <Button android:layout_height="wrap_content" android:id="@+id/add_to_history_button" android:layout_width="wrap_content" android:text="@string/label_add_to_history" android:layout_gravity="left" android:visibility="invisible"></Button>
         <Button android:id="@+id/add_to_locations_button" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_add_to_locations" android:layout_gravity="right" android:visibility="invisible"></Button>
     </LinearLayout>
+    <TextView android:layout_height="wrap_content" android:layout_width="match_parent" android:text="TextView" android:layout_marginTop="40dp" android:id="@+id/lunch_status" android:gravity="center_horizontal"></TextView>
 </LinearLayout>

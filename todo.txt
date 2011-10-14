@@ -1,0 +1,24 @@
+Add loading indicator
+Tab Image icons
+Pull extra fields from Google Places API
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Completed:
+Button visible/invisible logic
+Separate label for status

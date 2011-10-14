@@ -43,14 +43,10 @@ import android.util.Log;
 public class LunchDbAdapter {
 
 	public static final String TABLE_LOCATIONS = "locations";
-	public static final String TABLE_CUISINES = "cuisines";
 	public static final String TABLE_HISTORY = "history";
     public static final String KEY_LOCATIONS_ROWID = "_id";
     public static final String KEY_LOCATIONS_NAME = "name";
     public static final String KEY_LOCATIONS_GOOGLE_ID = "google_id";    
-    public static final String KEY_LOCATIONS_CUISINE_ID = "cuisine_id";
-    public static final String KEY_CUISINES_ROWID = "_id";
-    public static final String KEY_CUISINES_NAME = "name";
     public static final String KEY_HISTORY_ROWID = "_id";
     public static final String KEY_HISTORY_LOCATION_ID = "location_id";
     public static final String KEY_HISTORY_DATE = "date";
@@ -64,17 +60,11 @@ public class LunchDbAdapter {
      */
     private static final String DATABASE_CREATE =
         "create table locations ( _id integer primary key autoincrement, " +
-        	"name varchar(100) not null, google_id varchar(50) not null, cuisine_id int not null);" +
-    	"create table cuisines ( _id integer primary key autoincrement, " +
-    		"name varchar(100) not null);" +
+        	"name varchar(100) not null, google_id varchar(50) not null);" +
     	"create table history ( _id integer primary key autoincrement, " +
-    		"location_id varchar(50) not null, date date not null);" +
-    	"insert into cuisines (name) values ('American');" +
-    	"insert into cuisines (name) values ('Chinese');" +
-    	"insert into cuisines (name) values ('Thai');";
+    		"location_id integer not null, date date not null);";
 
     private static final String DATABASE_NAME = "data";
-    //private static final String DATABASE_TABLE = "notes";
     private static final int DATABASE_VERSION = 1;
 
     private final Context mCtx;
@@ -141,24 +131,6 @@ public class LunchDbAdapter {
         mDbHelper.close();
     }
 
-
-    /**
-     * Create a new note using the title and body provided. If the note is
-     * successfully created return the new rowId for that note, otherwise return
-     * a -1 to indicate failure.
-     * 
-     * @param title the title of the note
-     * @param body the body of the note
-     * @return rowId or -1 if failed
-     */
-    public long addLocation(String name, int cuisineId) {
-        ContentValues initialValues = new ContentValues();
-        initialValues.put(KEY_LOCATIONS_NAME, name);
-        initialValues.put(KEY_LOCATIONS_CUISINE_ID, cuisineId);
-
-        return mDb.insert(TABLE_LOCATIONS, null, initialValues);
-    }
-
     /**
      * Delete the location with the given rowId
      * 
@@ -170,7 +142,7 @@ public class LunchDbAdapter {
     public boolean deleteLocation(long rowId) {
 
     	mDb.delete(TABLE_LOCATIONS, KEY_LOCATIONS_ROWID + "=" + rowId, null);
-    	mDb.delete(TABLE_HISTORY, KEY_HISTORY_LOCATION_ID + "=" +rowId, null);
+    	mDb.delete(TABLE_HISTORY, KEY_HISTORY_ROWID + "=" +rowId, null);
         return true;
     }
     
@@ -186,8 +158,8 @@ public class LunchDbAdapter {
      * @return Cursor over all notes
      */
     public Cursor fetchAllLocations() {
-        return mDb.query(TABLE_LOCATIONS, new String[] {KEY_LOCATIONS_ROWID, KEY_LOCATIONS_NAME,
-                KEY_LOCATIONS_CUISINE_ID}, KEY_LOCATIONS_NAME + "<> ''", null, null, null, null);
+        return mDb.query(TABLE_LOCATIONS, new String[] {KEY_LOCATIONS_ROWID, KEY_LOCATIONS_NAME}
+        , KEY_LOCATIONS_NAME + "<> ''", null, null, null, null);
     }
     
     public Cursor fetchAllHistory() {
@@ -196,8 +168,6 @@ public class LunchDbAdapter {
 	    	joinSQL += KEY_HISTORY_ROWID + " = " + KEY_LOCATIONS_ROWID;
 	    	String rawSQL = "SELECT history._id _id, locations.name locationName, history.date historyDate FROM history INNER JOIN locations ON locations._id = history.location_id"; 
 	    	return mDb.rawQuery(rawSQL, null);
-	        //return  mDb.query(joinSQL, new String[] {KEY_LOCATIONS_ROWID, KEY_LOCATIONS_NAME, KEY_HISTORY_DATE},
-	       			//null, null, null, null, null);
     	} catch (Exception e) 
 	    {
 			// this is the line of code that sends a real error message to the log
@@ -212,55 +182,67 @@ public class LunchDbAdapter {
 
     /**
      */
-    public Boolean setTodaysLunch(JSONObject oLocation) {
+    public Boolean addHistory(String name, String googleId) {
         ContentValues initialValues = new ContentValues();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); 
         Date date = new Date();
         String today = dateFormat.format(date);
-        long id;
-        String google_id;
-        String name;
-        String cuisineId;
+        long locationId;
 		try {
-			google_id = oLocation.getString("id");
-			name = oLocation.getString("name");
-			cuisineId = oLocation.getString("cuisine_id");
-
-			//Update locations table
-			Cursor c = mDb.rawQuery("SELECT _id FROM locations WHERE google_id = '" + google_id +"'", null);
-			
-	        c.moveToFirst();
-	        if (c.getCount() == 0) { //Location doesn't exist yet, let's add it
-	        	initialValues.clear();
-	        	initialValues.put(KEY_LOCATIONS_NAME, name);
-	        	initialValues.put(KEY_LOCATIONS_GOOGLE_ID, google_id);
-	        	initialValues.put(KEY_LOCATIONS_CUISINE_ID, cuisineId);
-	        	id = mDb.insert(TABLE_LOCATIONS, null, initialValues);
-	        } else { 
-	        	id = c.getInt(c.getColumnIndex("_id"));
-	        }
+			//Update locations table (if needed)
+			locationId = this.addLocation(name, googleId);
 			
 	        //Update history table
-			c = mDb.rawQuery("SELECT COUNT (*) AS count FROM history WHERE date = '" + today + "'" , null);
+			Cursor c = mDb.rawQuery("SELECT COUNT (*) AS count FROM history WHERE date = '" + today + "'" , null);
 			c.moveToFirst();
-			if (c.getInt(c.getColumnIndex("count")) == 0) { //Location doesn't exist for today, let's add it
+			if (c.getInt(c.getColumnIndex("count")) == 0) { //History doesn't exist for today, let's add it
 				initialValues.clear();
-		        initialValues.put(KEY_HISTORY_LOCATION_ID, id);
+		        initialValues.put(KEY_HISTORY_LOCATION_ID, locationId);
 		        initialValues.put(KEY_HISTORY_DATE, today);
 		        mDb.insert(TABLE_HISTORY, null, initialValues);
 			} else { //just do an update
 				ContentValues cv = new ContentValues();
-				cv.put(KEY_HISTORY_LOCATION_ID, id);
+				cv.put(KEY_HISTORY_LOCATION_ID, locationId);
 				mDb.update(TABLE_HISTORY, cv, "date = '" + today + "'", null);
 			}
 
-		} catch (JSONException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
         
         return true;
+    }    
+    
+
+    /**
+     * Create a new note using the title and body provided. If the note is
+     * successfully created return the new rowId for that note, otherwise return
+     * a -1 to indicate failure.
+     * 
+     * @param title the title of the note
+     * @param body the body of the note
+     * @return rowId or -1 if failed
+     */
+    public long addLocation(String name, String googleId) {
+    	long id;
+    	ContentValues initialValues = new ContentValues();
+        
+		//Update locations table
+		Cursor c = mDb.rawQuery("SELECT _id FROM locations WHERE google_id = '" + googleId +"'", null);
+		
+        c.moveToFirst();
+        if (c.getCount() == 0) { //Location doesn't exist yet, let's add it
+        	initialValues.clear();
+        	initialValues.put(KEY_LOCATIONS_NAME, name);
+        	initialValues.put(KEY_LOCATIONS_GOOGLE_ID, googleId);
+        	id = mDb.insert(TABLE_LOCATIONS, null, initialValues);
+        } else { 
+        	id = c.getInt(c.getColumnIndex("_id"));
+        }
+        
+        return id;
     }    
    
 }

@@ -20,14 +20,16 @@ public final class R {
         public static final int icon=0x7f020003;
     }
     public static final class id {
-        public static final int add_to_history_button=0x7f06000b;
-        public static final int add_to_locations_button=0x7f06000c;
+        public static final int add_to_history_button=0x7f06000c;
+        public static final int add_to_locations_button=0x7f06000d;
         public static final int addbutton=0x7f060004;
         public static final int historydatetext=0x7f060003;
         public static final int historylocationtext=0x7f060001;
         public static final int linearLayout1=0x7f060000;
         public static final int locationtext=0x7f060005;
         public static final int lunch_result=0x7f06000a;
+        public static final int lunch_status=0x7f06000e;
+        public static final int searchProgressBar=0x7f06000b;
         public static final int searchText=0x7f060006;
         public static final int search_button=0x7f060009;
         public static final int seekBar1=0x7f060008;
@@ -50,17 +52,18 @@ public final class R {
         public static final int history_name=0x7f040003;
         public static final int label_add_to_history=0x7f04000c;
         public static final int label_add_to_locations=0x7f04000d;
-        public static final int label_favor_known_places=0x7f04000f;
+        public static final int label_favor_known_places=0x7f040010;
         public static final int label_search=0x7f04000b;
-        public static final int label_use_historical_data=0x7f040010;
+        public static final int label_use_historical_data=0x7f040011;
         public static final int locations_name=0x7f040004;
         public static final int main_name=0x7f040002;
         public static final int menu_add=0x7f040005;
         public static final int menu_delete=0x7f04000a;
-        public static final int msg_commit=0x7f04000e;
+        public static final int msg_add_history=0x7f04000e;
+        public static final int msg_add_location=0x7f04000f;
         public static final int no_history=0x7f040007;
         public static final int no_locations=0x7f040006;
-        public static final int search_lunch=0x7f040011;
-        public static final int spacer=0x7f040012;
+        public static final int search_lunch=0x7f040012;
+        public static final int spacer=0x7f040013;
     }
 }
