@@ -45,6 +45,7 @@ public class LocationsActivity extends ListActivity {
         // Now create a simple cursor adapter and set it to display
         SimpleCursorAdapter locations = 
             new SimpleCursorAdapter(this, R.layout.locations_row, mNotesCursor, from, to);
+
         setListAdapter(locations);
     }
     

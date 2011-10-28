@@ -58,9 +58,11 @@ public class LunchDbAdapter {
     /**
      * Database creation sql statement
      */
-    private static final String DATABASE_CREATE =
+    private static final String LOCATIONS_TABLE_CREATE =
         "create table locations ( _id integer primary key autoincrement, " +
-        	"name varchar(100) not null, google_id varchar(50) not null);" +
+        	"name varchar(100) not null, google_id varchar(50) not null);";
+        
+    private static final String HISTORY_TABLE_CREATE = 
     	"create table history ( _id integer primary key autoincrement, " +
     		"location_id integer not null, date date not null);";
 
@@ -77,8 +79,8 @@ public class LunchDbAdapter {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-
-            db.execSQL(DATABASE_CREATE);
+            db.execSQL(LOCATIONS_TABLE_CREATE);
+            db.execSQL(HISTORY_TABLE_CREATE);
         }
 
         

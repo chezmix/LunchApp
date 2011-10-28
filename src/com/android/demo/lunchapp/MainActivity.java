@@ -50,35 +50,10 @@ public class MainActivity extends Activity {
 	private JSONArray mLocations;
 	private JSONObject mJSONLocation;
 	private LocationManager lm;
-	private double mLatitude;
-	private double mLongitude;
+	//private double mLatitude;
+	//private double mLongitude;
 	private final String GOOGLE_PLACES_API_KEY = "AIzaSyCRdRdD5BZoFqxP0-h1hfPfuKbLeSTteBY";
-    
-	private final LocationListener locationListener = new LocationListener() {
-	    public void onLocationChanged(Location location) {
-	        mLongitude = location.getLongitude();
-	        mLatitude = location.getLatitude();
-	    }
 
-		@Override
-		public void onProviderDisabled(String provider) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void onProviderEnabled(String provider) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void onStatusChanged(String provider, int status, Bundle extras) {
-			Log.d("LOCATION", "location status changed:" + status);
-		}
-	};
-
-	
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
@@ -96,15 +71,16 @@ public class MainActivity extends Activity {
         mLastSearchString = "";
         mLocations = null;
         lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        //lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 
         
         mSearchForm = (EditText) findViewById(R.id.searchText);
+        /*
         mSearchForm.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
             	mSearchForm.setText("");
             }
-        });           
+        });*/           
         
         mSearchButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -118,12 +94,14 @@ public class MainActivity extends Activity {
         	    	String dummy = "";
         	    	new GetLocationsTask().execute(dummy);
         	    } else {
-        	    	mLunchResult.setText(getRandomLocation());
+        	    	if (mLocations != null) {
+	        	    	mLunchResult.setText(getRandomLocation());
+	    	    		mAddHistoryButton.setVisibility(View.VISIBLE);
+	    	    		mAddLocationButton.setVisibility(View.VISIBLE);
+	    	    		mAddHistoryButton.setEnabled(true);
+	    	    		mAddLocationButton.setEnabled(true);
+        	    	}
         	    	mSearchProgressBar.setVisibility(View.INVISIBLE);
-    	    		mAddHistoryButton.setVisibility(View.VISIBLE);
-    	    		mAddLocationButton.setVisibility(View.VISIBLE);
-    	    		mAddHistoryButton.setEnabled(true);
-    	    		mAddLocationButton.setEnabled(true);  	    	
         	    }
             }
         });
@@ -219,7 +197,7 @@ public class MainActivity extends Activity {
     	if (gpsLocation != null) {
 	    	String domain = "https://maps.googleapis.com/";
 	    	String path = "maps/api/place/search/json";
-	    	String location = Double.toString(mLatitude) + "," + Double.toString(mLongitude);
+	    	String location = Double.toString(gpsLocation.getLatitude()) + "," + Double.toString(gpsLocation.getLongitude());
 	    	String radius = "300";
 	    	String types = "food";
 	    	String name = Uri.encode((mSearchForm.getText().toString()));
@@ -289,7 +267,7 @@ public class MainActivity extends Activity {
     	    	String url = getGoogleURL();
     	    	if (url != "") {
         	    	mLocations = getLocations(new URL(url));
-	    	    	if (mLocations.length() > 0) {
+	    	    	if (mLocations != null && mLocations.length() > 0) {
 	        	    	labelText = getRandomLocation();
 	    	    	} else {
 	    	    		labelText = "No search results found.";
@@ -325,5 +303,31 @@ public class MainActivity extends Activity {
     	    mLunchResult.setText(labelText);    	    
         }
     }
+    
+	/*
+	private final LocationListener locationListener = new LocationListener() {
+		
+	    public void onLocationChanged(Location location) {
+	        mLongitude = location.getLongitude();
+	        mLatitude = location.getLatitude();
+	    }
+
+		@Override
+		public void onProviderDisabled(String provider) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onProviderEnabled(String provider) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onStatusChanged(String provider, int status, Bundle extras) {
+			Log.d("LOCATION", "location status changed:" + status);
+		}
+	};*/    
    
 }
